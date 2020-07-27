@@ -1,6 +1,7 @@
 INPUT_RAW_DATA_FILE = 'data/input_file_long.csv'
 VOCAB_FILE = 'data/bert_pretrained/vocab.txt'
 OUTPUT_PRETRAINING_DATA = 'data/model_input_data_long'
+OUTPUT_PRETRAINING_EVAL_DATA = ''
 DO_LOWER_CASE = True
 MAX_SEQ_LENGTH = 128
 
@@ -9,6 +10,7 @@ MODEL_OUTPUT_DIR = 'data/model_output_long/'
 BERT_INIT_CHECKPOINT = 'data/bert_pretrained/bert_model.ckpt'
 DO_TRAIN = True
 DO_EVAL = True
+EARLY_STOP_STEPS = 5000
 TRAIN_BATCH_SIZE = 32
 EVAL_BATCH_SIZE = 8
 LEARNING_RATE = 5e-5

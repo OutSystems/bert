@@ -39,6 +39,10 @@ flags.DEFINE_string(
     "Input TF example files (can be a glob or comma separated).")
 
 flags.DEFINE_string(
+    "eval_file", constants.OUTPUT_PRETRAINING_EVAL_DATA,
+    "Input TF example files (can be a glob or comma separated).")
+
+flags.DEFINE_string(
     "output_dir", constants.MODEL_OUTPUT_DIR,
     "The output directory where the model checkpoints will be written.")
 
@@ -418,6 +422,10 @@ def main(_):
   for input_pattern in FLAGS.input_file.split(","):
     input_files.extend(tf.gfile.Glob(input_pattern))
 
+  eval_files = []
+  for eval_pattern in FLAGS.eval_file.split(","):
+    eval_files.extend(tf.gfile.Glob(eval_pattern))
+
   tf.logging.info("*** Input Files ***")
   for input_file in input_files:
     tf.logging.info("  %s" % input_file)
@@ -464,7 +472,22 @@ def main(_):
         max_seq_length=FLAGS.max_seq_length,
         max_predictions_per_seq=FLAGS.max_predictions_per_seq,
         is_training=True)
-    estimator.train(input_fn=train_input_fn, max_steps=FLAGS.num_train_steps)
+
+    eval_input_fn = input_fn_builder(
+        input_files=eval_files,
+        max_seq_length=FLAGS.max_seq_length,
+        max_predictions_per_seq=FLAGS.max_predictions_per_seq,
+        is_training=False)
+
+    early_stopping = tf.estimator.experimental.stop_if_no_decrease_hook(estimator, metric_name="loss",
+                                                                        run_every_secs=60,
+                                                                        max_steps_without_decrease=constants.EARLY_STOP_STEPS)
+
+    estimator.train_and_evaluate(
+        estimator,
+        train_spec=tf.estimator.TrainSpec(train_input_fn, hooks=[early_stopping]),
+        eval_spec=tf.estimator.EvalSpec(eval_input_fn)
+    )
 
   if FLAGS.do_eval:
     tf.logging.info("***** Running evaluation *****")
